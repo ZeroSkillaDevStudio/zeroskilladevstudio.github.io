@@ -1,0 +1,57 @@
+name: Publish ZeroSkilla Dev Studio
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+
+    steps:
+      - name: Checkout website source
+        uses: actions/checkout@v4
+        with:
+          repository: k4mik4zz3-droid/zeroskilla-dev-studio
+          ref: main
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Refresh APK and ZIP downloads
+        run: node scripts/build-releases.mjs
+        env:
+          GITHUB_REPOSITORY: k4mik4zz3-droid/zeroskilla-dev-studio
+
+      - name: Update administration link
+        run: |
+          sed -i 's|https://github.com/k4mik4zz3-droid/zeroskilla-dev-studio/settings#danger-zone|https://github.com/ZeroSkillaDevStudio/zeroskilladevstudio.github.io/settings#danger-zone|g' dist/index.html
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload website
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+      - name: Deploy website
+        id: deployment
+        uses: actions/deploy-pages@v4
