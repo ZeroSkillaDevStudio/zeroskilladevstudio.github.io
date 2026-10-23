@@ -35,13 +35,14 @@ jobs:
         with:
           node-version: '22'
 
+      
       - name: Refresh APK and ZIP downloads
-        run: node scripts/build-releases.mjs
-        env:
-          GITHUB_REPOSITORY: k4mik4zz3-droid/zeroskilla-dev-studio
-
-      - name: Update administration link
         run: |
+          curl -fLsS --retry 3 \
+            https://k4mik4zz3-droid.github.io/zeroskilla-dev-studio/releases.json \
+            -o dist/releases.json
+            - name: Update administration link
+              run: |
           sed -i 's|https://github.com/k4mik4zz3-droid/zeroskilla-dev-studio/settings#danger-zone|https://github.com/ZeroSkillaDevStudio/zeroskilladevstudio.github.io/settings#danger-zone|g' dist/index.html
 
       - name: Configure GitHub Pages
