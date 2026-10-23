@@ -35,14 +35,18 @@ jobs:
         with:
           node-version: '22'
 
-      
       - name: Refresh APK and ZIP downloads
         run: |
           curl -fLsS --retry 3 \
             https://k4mik4zz3-droid.github.io/zeroskilla-dev-studio/releases.json \
             -o dist/releases.json
-            - name: Update administration link
-              run: |
+
+      - name: Verify downloads
+        run: |
+          node -e "const r=require('./dist/releases.json').releases; const n=Object.values(r).flatMap(x=>x.versions).flatMap(v=>v.files).length; if(!n) throw Error('Brak plikow'); console.log('Pliki do pobrania:',n)"
+
+      - name: Update administration link
+        run: |
           sed -i 's|https://github.com/k4mik4zz3-droid/zeroskilla-dev-studio/settings#danger-zone|https://github.com/ZeroSkillaDevStudio/zeroskilladevstudio.github.io/settings#danger-zone|g' dist/index.html
 
       - name: Configure GitHub Pages
