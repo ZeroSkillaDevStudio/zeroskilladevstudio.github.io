@@ -18,9 +18,11 @@ concurrency:
 
 jobs:
   publish:
+    if: vars.PUBLICATION_ENABLED != 'false'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout website source
@@ -35,19 +37,14 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Refresh APK and ZIP downloads
-        run: |
-          curl -fLsS --retry 3 \
-            https://k4mik4zz3-droid.github.io/zeroskilla-dev-studio/releases.json \
-            -o dist/releases.json
+      - name: Test release selection
+        run: node --test scripts/build-releases.test.mjs
 
-      - name: Verify downloads
-        run: |
-          node -e "const r=require('./dist/releases.json').releases; const n=Object.values(r).flatMap(x=>x.versions).flatMap(v=>v.files).length; if(!n) throw Error('Brak plikow'); console.log('Pliki do pobrania:',n)"
-
-      - name: Update administration link
-        run: |
-          sed -i 's|https://github.com/k4mik4zz3-droid/zeroskilla-dev-studio/settings#danger-zone|https://github.com/ZeroSkillaDevStudio/zeroskilladevstudio.github.io/settings#danger-zone|g' dist/index.html
+      - name: Build latest verified download catalog directly from GitHub
+        run: node scripts/build-releases.mjs
+        env:
+          RELEASE_REPOSITORY: k4mik4zz3-droid/zeroskilla-dev-studio
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
